@@ -5,7 +5,7 @@ This project implements the **Black-Scholes Model** to calculate the theoretical
 ## **How It Works**  
 1. Fetches **real-time stock data** from Yahoo Finance (`yfinance`).  
 2. Retrieves **option chain data** (strike prices, expiration dates).  
-3. Estimates **historical volatility (\u03C3)** using past stock returns.  
+3. Estimates **historical volatility using past stock returns.  
 4. Computes **call and put option prices** using the Black-Scholes formula.  
 5. **Compares results** with real market option prices.  
 6. **Visualizes volatility impact** on option prices.  
