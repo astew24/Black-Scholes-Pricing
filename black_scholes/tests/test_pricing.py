@@ -80,6 +80,16 @@ def test_black_scholes_put():
     assert price > 0
     assert price < 5  # Should be less valuable than ATM option
 
+def test_put_call_parity_prices():
+    """Test that put-call parity holds: C - P = S - K*exp(-rT)."""
+    S, K, T, r, sigma = 100.0, 100.0, 1.0, 0.05, 0.2
+    call = black_scholes(S, K, T, r, sigma, "call")
+    put  = black_scholes(S, K, T, r, sigma, "put")
+    parity_lhs = call - put
+    parity_rhs = S - K * np.exp(-r * T)
+    assert abs(parity_lhs - parity_rhs) < 1e-8
+
+
 def test_black_scholes_input_validation():
     """Test input validation for Black-Scholes pricing."""
     # Test invalid spot price
