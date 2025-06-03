@@ -36,6 +36,7 @@ def black_scholes(
         ValueError: If any of the input parameters are invalid
     """
     # Input validation
+    # Note: risk_free_rate can be negative (e.g. some EUR curves) — not validated here.
     if spot_price <= 0:
         raise ValueError("Spot price must be positive")
     if strike_price <= 0:
