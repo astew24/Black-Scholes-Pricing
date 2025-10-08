@@ -112,7 +112,8 @@ def calculate_greeks(
 
     theta = theta / 365  # convert to per-calendar-day (market convention)
 
-    # Common Greeks for both call and put
+    # Common Greeks for both call and put (identical by definition)
+    # Vega returned in price units per 1-unit vol move; divide by 100 for per-1%-point
     gamma = norm.pdf(d1) / (spot_price * volatility * np.sqrt(time_to_expiry))
     vega = spot_price * np.sqrt(time_to_expiry) * norm.pdf(d1)
 
