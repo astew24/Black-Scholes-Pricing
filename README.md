@@ -10,11 +10,29 @@ A Python package for calculating option prices and Greeks using the Black-Schole
 - Local preview: `python3 -m http.server 4173 --directory docs`
 - Streamlit app: `streamlit run black_scholes/streamlit/app.py`
 
+## Quick Start
+
+```python
+from black_scholes.core.pricing import black_scholes, calculate_greeks, implied_volatility
+
+# Price a call option
+price = black_scholes(spot_price=150, strike_price=155, time_to_expiry=0.25,
+                      risk_free_rate=0.05, volatility=0.25, option_type="call")
+
+# Get all Greeks
+greeks = calculate_greeks(150, 155, 0.25, 0.05, 0.25, "call")
+
+# Back out implied vol from a market price
+iv = implied_volatility(market_price=5.20, spot_price=150, strike_price=155,
+                        time_to_expiry=0.25, risk_free_rate=0.05)
+```
+
 ## Features
 
 - **Core Pricing Engine**
-  - Black-Scholes formula implementation for European options
-  - Greeks calculation (delta, gamma, theta, vega, rho)
+  - Black-Scholes formula for European calls and puts
+  - Greeks: delta, gamma, theta (per calendar day), vega, rho
+  - Implied volatility via Brent's method (`scipy.optimize.brentq`)
   - Input validation and error handling
 
 - **Market Data Integration**
