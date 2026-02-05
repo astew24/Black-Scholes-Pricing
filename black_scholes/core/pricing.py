@@ -73,6 +73,10 @@ def calculate_greeks(
 ) -> dict:
     """Calculate the option Greeks (delta, gamma, theta, vega, rho).
 
+    Theta is returned as a per-calendar-day value (divided by 365), matching
+    the convention used by most options trading platforms. Vega is in price
+    units per 1-unit change in volatility (divide by 100 for per-1%-point).
+
     Args:
         spot_price: Current price of the underlying asset (S)
         strike_price: Strike price of the option (K)
