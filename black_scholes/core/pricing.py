@@ -18,22 +18,10 @@ def black_scholes(
     volatility: float,
     option_type: OptionType = "call"
 ) -> float:
-    """Calculate the price of a European option using the Black-Scholes formula.
+    """Price a European call or put using the Black-Scholes formula.
 
-    Args:
-        spot_price: Current price of the underlying asset (S)
-        strike_price: Strike price of the option (K)
-        time_to_expiry: Time to expiration in years (T)
-        risk_free_rate: Risk-free interest rate as a decimal (r)
-        volatility: Volatility of the underlying asset (σ)
-        option_type: Type of option, either "call" or "put"
-
-    Returns:
-        float: The theoretical price of the option
-
-    Raises:
-        ValueError: If option_type is not "call" or "put"
-        ValueError: If any of the input parameters are invalid
+    spot_price and strike_price in the same currency; time_to_expiry in years;
+    volatility and risk_free_rate as decimals (e.g. 0.25 = 25%).
     """
     # Input validation
     # Note: risk_free_rate can be negative (e.g. some EUR curves) — not validated here.
@@ -71,22 +59,10 @@ def calculate_greeks(
     volatility: float,
     option_type: OptionType = "call"
 ) -> dict:
-    """Calculate the option Greeks (delta, gamma, theta, vega, rho).
+    """Compute delta, gamma, theta, vega, rho for a European option.
 
-    Theta is returned as a per-calendar-day value (divided by 365), matching
-    the convention used by most options trading platforms. Vega is in price
-    units per 1-unit change in volatility (divide by 100 for per-1%-point).
-
-    Args:
-        spot_price: Current price of the underlying asset (S)
-        strike_price: Strike price of the option (K)
-        time_to_expiry: Time to expiration in years (T)
-        risk_free_rate: Risk-free interest rate as a decimal (r)
-        volatility: Volatility of the underlying asset (σ)
-        option_type: Type of option, either "call" or "put"
-
-    Returns:
-        dict: Dictionary containing the option Greeks
+    Theta is per calendar day (divided by 365) — matches what most platforms show.
+    Vega is per 1-unit vol move; divide by 100 if you want per 1 percentage-point.
     """
     # Input validation
     if spot_price <= 0:
@@ -140,23 +116,11 @@ def implied_volatility(
     tol: float = 1e-6,
     max_iterations: int = 100,
 ) -> float:
-    """Back out implied volatility from an observed market price using Brent's method.
+    """Back out implied vol from a market price using Brent's method.
 
-    Args:
-        market_price: Observed market price of the option
-        spot_price: Current price of the underlying asset (S)
-        strike_price: Strike price of the option (K)
-        time_to_expiry: Time to expiration in years (T)
-        risk_free_rate: Risk-free interest rate as a decimal (r)
-        option_type: Type of option, either "call" or "put"
-        tol: Tolerance for the root-finding convergence
-        max_iterations: Maximum number of Brent iterations
-
-    Returns:
-        float: Implied volatility as a decimal (e.g. 0.25 = 25%)
-
-    Raises:
-        ValueError: If no implied volatility exists for the given market price
+    Searches vol in [1e-6, 10.0]. Raises ValueError if the market price
+    is outside the no-arbitrage bounds (usually means the price is stale
+    or the params are wrong).
     """
     from scipy.optimize import brentq
 
