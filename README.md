@@ -1,6 +1,14 @@
 # Black-Scholes Option Pricing
 
+Live demo: `https://astew24.github.io/Black-Scholes-Pricing/`
+
 A Python package for calculating option prices and Greeks using the Black-Scholes model, with support for real market data integration and interactive visualization.
+
+## Live Demo
+
+- Static GitHub Pages demo: `https://astew24.github.io/Black-Scholes-Pricing/`
+- Local preview: `python3 -m http.server 4173 --directory docs`
+- Streamlit app: `streamlit run black_scholes/streamlit/app.py`
 
 ## Features
 
@@ -33,8 +41,8 @@ A Python package for calculating option prices and Greeks using the Black-Schole
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/black-scholes-pricing.git
-cd black-scholes-pricing
+git clone https://github.com/astew24/Black-Scholes-Pricing.git
+cd Black-Scholes-Pricing
 ```
 
 2. Create and activate a virtual environment (recommended):
@@ -158,5 +166,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Black-Scholes model by Fischer Black and Myron Scholes
 - yfinance for market data access
 - Streamlit for the web interface framework
-
 

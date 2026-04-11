@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Black-Scholes Pricing Desk</title>
+    <meta
+      name="description"
+      content="A polished static Black-Scholes demo for pricing European calls and puts, exploring Greeks, and visualizing payoff and sensitivity curves."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="background-grid" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="brand" href="./">
+        <span class="brand-mark">BS</span>
+        <span class="brand-copy">
+          <strong>Black-Scholes Pricing Desk</strong>
+          <small>Static GitHub Pages demo</small>
+        </span>
+      </a>
+      <nav class="topbar-links" aria-label="Project links">
+        <a href="https://github.com/astew24/Black-Scholes-Pricing">Repository</a>
+        <a href="#curves">Curves</a>
+        <a href="#model-note">Model Note</a>
+      </nav>
+    </header>
+
+    <main class="shell">
+      <section class="hero" data-reveal>
+        <div class="hero-copy panel panel-hero">
+          <div class="eyebrow-row">
+            <span class="eyebrow">Live Calculator</span>
+            <span class="eyebrow muted">European options only</span>
+          </div>
+          <h1>Option pricing without the terminal chrome.</h1>
+          <p class="hero-text">
+            This demo keeps the Black-Scholes math transparent while presenting
+            the output like a clean desk note: fair value, Greeks, breakevens,
+            payoff shape, and parameter sensitivity in one place.
+          </p>
+
+          <div class="hero-metrics" id="hero-metrics">
+            <article>
+              <span>Call Value</span>
+              <strong id="metric-call">-</strong>
+            </article>
+            <article>
+              <span>Put Value</span>
+              <strong id="metric-put">-</strong>
+            </article>
+            <article>
+              <span>Moneyness</span>
+              <strong id="metric-moneyness">-</strong>
+            </article>
+          </div>
+
+          <div class="preset-block">
+            <div class="section-label">Scenario Presets</div>
+            <div class="preset-list" role="list">
+              <button class="preset-chip active" data-preset="baseline" type="button">
+                Balanced ATM
+              </button>
+              <button class="preset-chip" data-preset="momentum" type="button">
+                Momentum Call
+              </button>
+              <button class="preset-chip" data-preset="hedge" type="button">
+                Protective Put
+              </button>
+              <button class="preset-chip" data-preset="earnings" type="button">
+                Earnings Week
+              </button>
+            </div>
+          </div>
+
+          <div class="formula-note">
+            <div class="section-label">Formula Frame</div>
+            <p>
+              The dashboard uses the closed-form Black-Scholes solution with
+              constant volatility, continuous compounding, and no dividends.
+            </p>
+            <code>C = S N(d1) - K e<sup>-rT</sup> N(d2)</code>
+          </div>
+        </div>
+
+        <form class="panel panel-controls controls" id="pricing-form">
+          <div class="panel-header">
+            <div>
+              <span class="section-label">Inputs</span>
+              <h2>Model Assumptions</h2>
+            </div>
+            <p>Use realistic values and the outputs update instantly.</p>
+          </div>
+
+          <label class="control">
+            <span>Spot Price</span>
+            <div class="field-wrap">
+              <span class="field-prefix">$</span>
+              <input id="spot-price" name="spotPrice" type="number" min="1" step="0.01" value="100" />
+            </div>
+          </label>
+
+          <label class="control">
+            <span>Strike Price</span>
+            <div class="field-wrap">
+              <span class="field-prefix">$</span>
+              <input id="strike-price" name="strikePrice" type="number" min="1" step="0.01" value="100" />
+            </div>
+          </label>
+
+          <label class="control">
+            <span>Days to Expiry</span>
+            <div class="field-wrap">
+              <span class="field-prefix">D</span>
+              <input id="days-to-expiry" name="daysToExpiry" type="number" min="1" step="1" value="365" />
+            </div>
+          </label>
+
+          <label class="control">
+            <span>Risk-Free Rate</span>
+            <div class="field-wrap">
+              <span class="field-prefix">%</span>
+              <input id="risk-free-rate" name="riskFreeRate" type="number" min="0" step="0.01" value="4.5" />
+            </div>
+          </label>
+
+          <label class="control">
+            <span>Volatility</span>
+            <div class="field-wrap">
+              <span class="field-prefix">%</span>
+              <input id="volatility" name="volatility" type="number" min="0.1" step="0.1" value="20" />
+            </div>
+          </label>
+
+          <div class="panel-footer">
+            <div class="micro-copy">
+              Rates and volatility are entered as percentages. Theta is shown
+              per day. Vega and rho are shown per 1 percentage-point move.
+            </div>
+            <div class="validation-message" id="validation-message" role="status" aria-live="polite"></div>
+          </div>
+        </form>
+      </section>
+
+      <section class="summary-grid" data-reveal>
+        <article class="panel result-card">
+          <div class="section-label">Call</div>
+          <h2 id="call-price">-</h2>
+          <dl class="metric-list">
+            <div>
+              <dt>Intrinsic</dt>
+              <dd id="call-intrinsic">-</dd>
+            </div>
+            <div>
+              <dt>Time Value</dt>
+              <dd id="call-time-value">-</dd>
+            </div>
+            <div>
+              <dt>Breakeven</dt>
+              <dd id="call-breakeven">-</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="panel result-card accent-card">
+          <div class="section-label">Put</div>
+          <h2 id="put-price">-</h2>
+          <dl class="metric-list">
+            <div>
+              <dt>Intrinsic</dt>
+              <dd id="put-intrinsic">-</dd>
+            </div>
+            <div>
+              <dt>Time Value</dt>
+              <dd id="put-time-value">-</dd>
+            </div>
+            <div>
+              <dt>Breakeven</dt>
+              <dd id="put-breakeven">-</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="panel insight-card">
+          <div class="section-label">Desk Read</div>
+          <h2>Interpretation</h2>
+          <ul class="insight-list" id="insight-list"></ul>
+        </article>
+      </section>
+
+      <section class="greeks-section panel" data-reveal>
+        <div class="panel-header">
+          <div>
+            <span class="section-label">Risk View</span>
+            <h2>Greeks Board</h2>
+          </div>
+          <p>Call and put sensitivities share gamma and vega but split directionally on delta and rho.</p>
+        </div>
+
+        <div class="greeks-table" role="table" aria-label="Option Greeks">
+          <div class="greeks-head" role="rowgroup">
+            <div role="row">
+              <span role="columnheader">Greek</span>
+              <span role="columnheader">Call</span>
+              <span role="columnheader">Put</span>
+            </div>
+          </div>
+          <div class="greeks-body" role="rowgroup">
+            <div role="row">
+              <span role="cell">Delta</span>
+              <span id="call-delta" role="cell">-</span>
+              <span id="put-delta" role="cell">-</span>
+            </div>
+            <div role="row">
+              <span role="cell">Gamma</span>
+              <span id="call-gamma" role="cell">-</span>
+              <span id="put-gamma" role="cell">-</span>
+            </div>
+            <div role="row">
+              <span role="cell">Theta / day</span>
+              <span id="call-theta" role="cell">-</span>
+              <span id="put-theta" role="cell">-</span>
+            </div>
+            <div role="row">
+              <span role="cell">Vega / 1%</span>
+              <span id="call-vega" role="cell">-</span>
+              <span id="put-vega" role="cell">-</span>
+            </div>
+            <div role="row">
+              <span role="cell">Rho / 1%</span>
+              <span id="call-rho" role="cell">-</span>
+              <span id="put-rho" role="cell">-</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="curve-grid" id="curves" data-reveal>
+        <article class="panel chart-card">
+          <div class="panel-header">
+            <div>
+              <span class="section-label">At Expiry</span>
+              <h2>Payoff Curve</h2>
+            </div>
+            <p>Profit and loss for a long option position using the model premium as the entry cost.</p>
+          </div>
+          <div class="chart-frame" id="payoff-chart" aria-label="Payoff chart"></div>
+        </article>
+
+        <article class="panel chart-card">
+          <div class="panel-header chart-header">
+            <div>
+              <span class="section-label">Before Expiry</span>
+              <h2>Sensitivity Curve</h2>
+            </div>
+            <div class="segmented" role="tablist" aria-label="Sensitivity parameter">
+              <button class="segment active" type="button" data-driver="spot">Spot</button>
+              <button class="segment" type="button" data-driver="volatility">Vol</button>
+              <button class="segment" type="button" data-driver="time">Time</button>
+            </div>
+          </div>
+          <div class="chart-frame" id="sensitivity-chart" aria-label="Sensitivity chart"></div>
+        </article>
+      </section>
+
+      <section class="panel model-note" id="model-note" data-reveal>
+        <div class="panel-header">
+          <div>
+            <span class="section-label">Context</span>
+            <h2>How to Read the Output</h2>
+          </div>
+          <p>This demo favors interpretability over market-data complexity.</p>
+        </div>
+        <div class="note-grid">
+          <p>
+            Black-Scholes is most useful as a baseline: it prices European
+            options under lognormal returns, constant volatility, and frictionless
+            markets. Real markets break those assumptions, especially around
+            dividends, jumps, skew, and early exercise.
+          </p>
+          <p>
+            That is why the charting here is deterministic and client-side. The
+            point is to understand the shape of the model and its sensitivities,
+            not to imply that a single closed-form value is the market truth.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Built from the pricing logic in the repository and published as a static Pages demo.</p>
+    </footer>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
