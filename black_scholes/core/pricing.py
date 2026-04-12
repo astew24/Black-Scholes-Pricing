@@ -119,4 +119,47 @@ def calculate_greeks(
         "theta": theta,
         "vega": vega,
         "rho": rho
-    } 
+    }
+
+
+def implied_volatility(
+    market_price: float,
+    spot_price: float,
+    strike_price: float,
+    time_to_expiry: float,
+    risk_free_rate: float,
+    option_type: OptionType = "call",
+    tol: float = 1e-6,
+    max_iterations: int = 100,
+) -> float:
+    """Back out implied volatility from an observed market price using Brent's method.
+
+    Args:
+        market_price: Observed market price of the option
+        spot_price: Current price of the underlying asset (S)
+        strike_price: Strike price of the option (K)
+        time_to_expiry: Time to expiration in years (T)
+        risk_free_rate: Risk-free interest rate as a decimal (r)
+        option_type: Type of option, either "call" or "put"
+        tol: Tolerance for the root-finding convergence
+        max_iterations: Maximum number of Brent iterations
+
+    Returns:
+        float: Implied volatility as a decimal (e.g. 0.25 = 25%)
+
+    Raises:
+        ValueError: If no implied volatility exists for the given market price
+    """
+    from scipy.optimize import brentq
+
+    def objective(sigma: float) -> float:
+        return black_scholes(spot_price, strike_price, time_to_expiry,
+                             risk_free_rate, sigma, option_type) - market_price
+
+    try:
+        return brentq(objective, 1e-6, 10.0, xtol=tol, maxiter=max_iterations)
+    except ValueError:
+        raise ValueError(
+            f"No implied volatility found for market_price={market_price:.4f}. "
+            "Price may be outside the no-arbitrage bounds."
+        )
