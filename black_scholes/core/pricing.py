@@ -109,6 +109,8 @@ def calculate_greeks(
                 risk_free_rate * strike_price * np.exp(-risk_free_rate * time_to_expiry) * norm.cdf(-d2))
         rho = -strike_price * time_to_expiry * np.exp(-risk_free_rate * time_to_expiry) * norm.cdf(-d2)
 
+    theta = theta / 365  # convert to per-calendar-day (market convention)
+
     # Common Greeks for both call and put
     gamma = norm.pdf(d1) / (spot_price * volatility * np.sqrt(time_to_expiry))
     vega = spot_price * np.sqrt(time_to_expiry) * norm.pdf(d1)
