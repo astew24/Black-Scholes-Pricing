@@ -18,24 +18,13 @@ def black_scholes(
     volatility: float,
     option_type: OptionType = "call"
 ) -> float:
-    """Calculate the price of a European option using the Black-Scholes formula.
+    """Price a European call or put using the Black-Scholes formula.
 
-    Args:
-        spot_price: Current price of the underlying asset (S)
-        strike_price: Strike price of the option (K)
-        time_to_expiry: Time to expiration in years (T)
-        risk_free_rate: Risk-free interest rate as a decimal (r)
-        volatility: Volatility of the underlying asset (σ)
-        option_type: Type of option, either "call" or "put"
-
-    Returns:
-        float: The theoretical price of the option
-
-    Raises:
-        ValueError: If option_type is not "call" or "put"
-        ValueError: If any of the input parameters are invalid
+    spot_price and strike_price in the same currency; time_to_expiry in years;
+    volatility and risk_free_rate as decimals (e.g. 0.25 = 25%).
     """
     # Input validation
+    # Note: risk_free_rate can be negative (e.g. some EUR curves) — not validated here.
     if spot_price <= 0:
         raise ValueError("Spot price must be positive")
     if strike_price <= 0:
@@ -70,18 +59,10 @@ def calculate_greeks(
     volatility: float,
     option_type: OptionType = "call"
 ) -> dict:
-    """Calculate the option Greeks (delta, gamma, theta, vega, rho).
+    """Compute delta, gamma, theta, vega, rho for a European option.
 
-    Args:
-        spot_price: Current price of the underlying asset (S)
-        strike_price: Strike price of the option (K)
-        time_to_expiry: Time to expiration in years (T)
-        risk_free_rate: Risk-free interest rate as a decimal (r)
-        volatility: Volatility of the underlying asset (σ)
-        option_type: Type of option, either "call" or "put"
-
-    Returns:
-        dict: Dictionary containing the option Greeks
+    Theta is per calendar day (divided by 365) — matches what most platforms show.
+    Vega is per 1-unit vol move; divide by 100 if you want per 1 percentage-point.
     """
     # Input validation
     if spot_price <= 0:
@@ -109,7 +90,10 @@ def calculate_greeks(
                 risk_free_rate * strike_price * np.exp(-risk_free_rate * time_to_expiry) * norm.cdf(-d2))
         rho = -strike_price * time_to_expiry * np.exp(-risk_free_rate * time_to_expiry) * norm.cdf(-d2)
 
-    # Common Greeks for both call and put
+    theta = theta / 365  # convert to per-calendar-day (market convention)
+
+    # Common Greeks for both call and put (identical by definition)
+    # Vega returned in price units per 1-unit vol move; divide by 100 for per-1%-point
     gamma = norm.pdf(d1) / (spot_price * volatility * np.sqrt(time_to_expiry))
     vega = spot_price * np.sqrt(time_to_expiry) * norm.pdf(d1)
 
@@ -119,4 +103,35 @@ def calculate_greeks(
         "theta": theta,
         "vega": vega,
         "rho": rho
-    } 
+    }
+
+
+def implied_volatility(
+    market_price: float,
+    spot_price: float,
+    strike_price: float,
+    time_to_expiry: float,
+    risk_free_rate: float,
+    option_type: OptionType = "call",
+    tol: float = 1e-6,
+    max_iterations: int = 100,
+) -> float:
+    """Back out implied vol from a market price using Brent's method.
+
+    Searches vol in [1e-6, 10.0]. Raises ValueError if the market price
+    is outside the no-arbitrage bounds (usually means the price is stale
+    or the params are wrong).
+    """
+    from scipy.optimize import brentq
+
+    def objective(sigma: float) -> float:
+        return black_scholes(spot_price, strike_price, time_to_expiry,
+                             risk_free_rate, sigma, option_type) - market_price
+
+    try:
+        return brentq(objective, 1e-6, 10.0, xtol=tol, maxiter=max_iterations)
+    except ValueError:
+        raise ValueError(
+            f"No implied volatility found for market_price={market_price:.4f}. "
+            "Price may be outside the no-arbitrage bounds."
+        )

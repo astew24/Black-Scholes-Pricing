@@ -1,405 +1,305 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Black-Scholes Option Pricing</title>
-  <meta name="description" content="A Python package for pricing European options and calculating Greeks using the Black-Scholes model, with real market data and a Streamlit interface.">
-  <style>
-    :root {
-      --bg: oklch(97.4% 0.006 225);
-      --paper: oklch(99.5% 0.003 225);
-      --ink: oklch(19% 0.018 240);
-      --muted: oklch(47% 0.018 230);
-      --line: oklch(88% 0.014 225);
-      --soft: oklch(94% 0.010 225);
-      --accent: oklch(44% 0.10 225);
-      --call: oklch(47% 0.12 155);
-      --put: oklch(46% 0.12 20);
-      --code: oklch(16% 0.015 240);
-      --code-text: oklch(92% 0.012 225);
-      --max: 1080px;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Black-Scholes Pricing Desk</title>
+    <meta
+      name="description"
+      content="A polished static Black-Scholes demo for pricing European calls and puts, exploring Greeks, and visualizing payoff and sensitivity curves."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="background-grid" aria-hidden="true"></div>
 
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 16px;
-      line-height: 1.6;
-    }
-
-    a { color: var(--accent); text-underline-offset: 3px; }
-
-    .wrap {
-      width: min(var(--max), calc(100% - 40px));
-      margin: 0 auto;
-    }
-
-    header {
-      background: var(--paper);
-      border-bottom: 1px solid var(--line);
-    }
-
-    nav {
-      min-height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-    }
-
-    .brand {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .links {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      font-size: 14px;
-    }
-
-    .hero { padding: 56px 0 32px; }
-
-    .eyebrow {
-      margin: 0 0 12px;
-      color: var(--muted);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 13px;
-    }
-
-    h1 {
-      max-width: 820px;
-      margin: 0;
-      font-size: clamp(34px, 6vw, 58px);
-      line-height: 1.05;
-      letter-spacing: -0.01em;
-    }
-
-    .lede {
-      max-width: 760px;
-      margin: 20px 0 0;
-      color: var(--muted);
-      font-size: 18px;
-    }
-
-    .actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 24px;
-    }
-
-    .button {
-      display: inline-flex;
-      align-items: center;
-      min-height: 40px;
-      padding: 0 16px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      background: var(--paper);
-      color: var(--ink);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .button.primary {
-      background: var(--ink);
-      border-color: var(--ink);
-      color: oklch(99% 0.003 225);
-    }
-
-    main { padding: 20px 0 64px; }
-
-    section {
-      margin-top: 28px;
-      padding-top: 28px;
-      border-top: 1px solid var(--line);
-    }
-
-    h2 {
-      margin: 0 0 16px;
-      font-size: 24px;
-      line-height: 1.25;
-    }
-
-    h3 {
-      margin: 0 0 8px;
-      font-size: 16px;
-      line-height: 1.3;
-    }
-
-    p { margin: 0 0 16px; color: var(--muted); }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-
-    .card, .file {
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px;
-    }
-
-    .card p, .file p { margin: 0; font-size: 14px; }
-
-    .greeks {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 12px;
-      margin-top: 20px;
-    }
-
-    .greek {
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px;
-    }
-
-    .greek .symbol {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--accent);
-      display: block;
-      margin-bottom: 6px;
-    }
-
-    .greek span {
-      display: block;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.4;
-    }
-
-    .interfaces {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-top: 20px;
-    }
-
-    .iface {
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px;
-    }
-
-    .iface p { margin: 0 0 8px; font-size: 14px; }
-
-    .files {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-top: 20px;
-    }
-
-    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-
-    pre {
-      margin: 16px 0 0;
-      overflow-x: auto;
-      border-radius: 8px;
-      background: var(--code);
-      color: var(--code-text);
-      padding: 16px;
-      font-size: 13px;
-      line-height: 1.55;
-    }
-
-    .formula {
-      background: var(--soft);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px 20px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 14px;
-      color: var(--ink);
-      margin-top: 16px;
-    }
-
-    .note {
-      background: var(--soft);
-      color: var(--muted);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px;
-      font-style: italic;
-    }
-
-    footer {
-      border-top: 1px solid var(--line);
-      padding: 24px 0 32px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    @media (max-width: 860px) {
-      nav { align-items: flex-start; flex-direction: column; padding: 16px 0; }
-      .cards, .greeks, .interfaces, .files { grid-template-columns: 1fr; }
-      .hero { padding-top: 40px; }
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <div class="wrap">
-      <nav>
-        <div class="brand">black-scholes-pricing</div>
-        <div class="links">
-          <a href="#greeks">Greeks</a>
-          <a href="#interfaces">Interfaces</a>
-          <a href="#run">Run</a>
-          <a href="https://github.com/astew24/Black-Scholes-Pricing">GitHub</a>
-        </div>
+    <header class="topbar">
+      <a class="brand" href="./">
+        <span class="brand-mark">BS</span>
+        <span class="brand-copy">
+          <strong>Black-Scholes Pricing Desk</strong>
+          <small>Static GitHub Pages demo</small>
+        </span>
+      </a>
+      <nav class="topbar-links" aria-label="Project links">
+        <a href="https://github.com/astew24/Black-Scholes-Pricing">Repository</a>
+        <a href="#curves">Curves</a>
+        <a href="#model-note">Model Note</a>
       </nav>
-    </div>
-  </header>
+    </header>
 
-  <div class="wrap hero">
-    <p class="eyebrow">Python · Black-Scholes · Greeks · Streamlit · yfinance</p>
-    <h1>European option pricing with real market data and interactive exploration.</h1>
-    <p class="lede">
-      A Python package that calculates fair value and risk sensitivities for European call and put
-      options using the Black-Scholes model, with live stock data, a Streamlit web interface, and a CLI.
-    </p>
-    <div class="actions">
-      <a class="button primary" href="https://github.com/astew24/Black-Scholes-Pricing">View repository</a>
-      <a class="button" href="#interfaces">Explore interfaces</a>
-    </div>
-  </div>
+    <main class="shell">
+      <section class="hero" data-reveal>
+        <div class="hero-copy panel panel-hero">
+          <div class="eyebrow-row">
+            <span class="eyebrow">Live Calculator</span>
+            <span class="eyebrow muted">European options only</span>
+          </div>
+          <h1>Option pricing without the terminal chrome.</h1>
+          <p class="hero-text">
+            This demo keeps the Black-Scholes math transparent while presenting
+            the output like a clean desk note: fair value, Greeks, breakevens,
+            payoff shape, and parameter sensitivity in one place.
+          </p>
 
-  <main class="wrap">
-    <section>
-      <h2>What it does</h2>
-      <div class="cards">
-        <article class="card">
-          <h3>Prices options</h3>
-          <p>Applies the closed-form Black-Scholes solution for European calls and puts given spot, strike, expiry, volatility, and risk-free rate.</p>
+          <div class="hero-metrics" id="hero-metrics">
+            <article>
+              <span>Call Value</span>
+              <strong id="metric-call">-</strong>
+            </article>
+            <article>
+              <span>Put Value</span>
+              <strong id="metric-put">-</strong>
+            </article>
+            <article>
+              <span>Moneyness</span>
+              <strong id="metric-moneyness">-</strong>
+            </article>
+          </div>
+
+          <div class="preset-block">
+            <div class="section-label">Scenario Presets</div>
+            <div class="preset-list" role="list">
+              <button class="preset-chip active" data-preset="baseline" type="button">
+                Balanced ATM
+              </button>
+              <button class="preset-chip" data-preset="momentum" type="button">
+                Momentum Call
+              </button>
+              <button class="preset-chip" data-preset="hedge" type="button">
+                Protective Put
+              </button>
+              <button class="preset-chip" data-preset="earnings" type="button">
+                Earnings Week
+              </button>
+            </div>
+          </div>
+
+          <div class="formula-note">
+            <div class="section-label">Formula Frame</div>
+            <p>
+              The dashboard uses the closed-form Black-Scholes solution with
+              constant volatility, continuous compounding, and no dividends.
+            </p>
+            <code>C = S N(d1) - K e<sup>-rT</sup> N(d2)</code>
+          </div>
+        </div>
+
+        <form class="panel panel-controls controls" id="pricing-form">
+          <div class="panel-header">
+            <div>
+              <span class="section-label">Inputs</span>
+              <h2>Model Assumptions</h2>
+            </div>
+            <p>Use realistic values and the outputs update instantly.</p>
+          </div>
+
+          <label class="control">
+            <span>Spot Price</span>
+            <div class="field-wrap">
+              <span class="field-prefix">$</span>
+              <input id="spot-price" name="spotPrice" type="number" min="1" step="0.01" value="100" />
+            </div>
+          </label>
+
+          <label class="control">
+            <span>Strike Price</span>
+            <div class="field-wrap">
+              <span class="field-prefix">$</span>
+              <input id="strike-price" name="strikePrice" type="number" min="1" step="0.01" value="100" />
+            </div>
+          </label>
+
+          <label class="control">
+            <span>Days to Expiry</span>
+            <div class="field-wrap">
+              <span class="field-prefix">D</span>
+              <input id="days-to-expiry" name="daysToExpiry" type="number" min="1" step="1" value="365" />
+            </div>
+          </label>
+
+          <label class="control">
+            <span>Risk-Free Rate</span>
+            <div class="field-wrap">
+              <span class="field-prefix">%</span>
+              <input id="risk-free-rate" name="riskFreeRate" type="number" min="0" step="0.01" value="4.5" />
+            </div>
+          </label>
+
+          <label class="control">
+            <span>Volatility</span>
+            <div class="field-wrap">
+              <span class="field-prefix">%</span>
+              <input id="volatility" name="volatility" type="number" min="0.1" step="0.1" value="20" />
+            </div>
+          </label>
+
+          <div class="panel-footer">
+            <div class="micro-copy">
+              Rates and volatility are entered as percentages. Theta is shown
+              per day. Vega and rho are shown per 1 percentage-point move.
+            </div>
+            <div class="validation-message" id="validation-message" role="status" aria-live="polite"></div>
+          </div>
+        </form>
+      </section>
+
+      <section class="summary-grid" data-reveal>
+        <article class="panel result-card">
+          <div class="section-label">Call</div>
+          <h2 id="call-price">-</h2>
+          <dl class="metric-list">
+            <div>
+              <dt>Intrinsic</dt>
+              <dd id="call-intrinsic">-</dd>
+            </div>
+            <div>
+              <dt>Time Value</dt>
+              <dd id="call-time-value">-</dd>
+            </div>
+            <div>
+              <dt>Breakeven</dt>
+              <dd id="call-breakeven">-</dd>
+            </div>
+          </dl>
         </article>
-        <article class="card">
-          <h3>Calculates all five Greeks</h3>
-          <p>Delta, gamma, theta, vega, and rho — the sensitivities that tell you how the option value moves as market conditions change.</p>
+
+        <article class="panel result-card accent-card">
+          <div class="section-label">Put</div>
+          <h2 id="put-price">-</h2>
+          <dl class="metric-list">
+            <div>
+              <dt>Intrinsic</dt>
+              <dd id="put-intrinsic">-</dd>
+            </div>
+            <div>
+              <dt>Time Value</dt>
+              <dd id="put-time-value">-</dd>
+            </div>
+            <div>
+              <dt>Breakeven</dt>
+              <dd id="put-breakeven">-</dd>
+            </div>
+          </dl>
         </article>
-        <article class="card">
-          <h3>Uses live market data</h3>
-          <p>Fetches real-time stock prices and implied volatility from Yahoo Finance, and approximates the risk-free rate from Treasury yields.</p>
+
+        <article class="panel insight-card">
+          <div class="section-label">Desk Read</div>
+          <h2>Interpretation</h2>
+          <ul class="insight-list" id="insight-list"></ul>
         </article>
-      </div>
-    </section>
+      </section>
 
-    <section>
-      <h2>The formula</h2>
-      <p>The model has a closed-form solution under lognormal returns, constant volatility, and no dividends.</p>
-      <div class="formula">
-        C = S·N(d₁) − K·e<sup>−rT</sup>·N(d₂)<br><br>
-        d₁ = [ln(S/K) + (r + σ²/2)·T] / (σ√T)<br>
-        d₂ = d₁ − σ√T
-      </div>
-    </section>
-
-    <section id="greeks">
-      <h2>Greeks</h2>
-      <p>Each Greek measures a different dimension of option risk.</p>
-      <div class="greeks">
-        <div class="greek">
-          <span class="symbol">Δ Delta</span>
-          <span>Price change per $1 move in the underlying stock.</span>
+      <section class="greeks-section panel" data-reveal>
+        <div class="panel-header">
+          <div>
+            <span class="section-label">Risk View</span>
+            <h2>Greeks Board</h2>
+          </div>
+          <p>Call and put sensitivities share gamma and vega but split directionally on delta and rho.</p>
         </div>
-        <div class="greek">
-          <span class="symbol">Γ Gamma</span>
-          <span>Rate of change of delta — how quickly your hedge drifts.</span>
+
+        <div class="greeks-table" role="table" aria-label="Option Greeks">
+          <div class="greeks-head" role="rowgroup">
+            <div role="row">
+              <span role="columnheader">Greek</span>
+              <span role="columnheader">Call</span>
+              <span role="columnheader">Put</span>
+            </div>
+          </div>
+          <div class="greeks-body" role="rowgroup">
+            <div role="row">
+              <span role="cell">Delta</span>
+              <span id="call-delta" role="cell">-</span>
+              <span id="put-delta" role="cell">-</span>
+            </div>
+            <div role="row">
+              <span role="cell">Gamma</span>
+              <span id="call-gamma" role="cell">-</span>
+              <span id="put-gamma" role="cell">-</span>
+            </div>
+            <div role="row">
+              <span role="cell">Theta / day</span>
+              <span id="call-theta" role="cell">-</span>
+              <span id="put-theta" role="cell">-</span>
+            </div>
+            <div role="row">
+              <span role="cell">Vega / 1%</span>
+              <span id="call-vega" role="cell">-</span>
+              <span id="put-vega" role="cell">-</span>
+            </div>
+            <div role="row">
+              <span role="cell">Rho / 1%</span>
+              <span id="call-rho" role="cell">-</span>
+              <span id="put-rho" role="cell">-</span>
+            </div>
+          </div>
         </div>
-        <div class="greek">
-          <span class="symbol">Θ Theta</span>
-          <span>Value lost per day as the option approaches expiry.</span>
+      </section>
+
+      <section class="curve-grid" id="curves" data-reveal>
+        <article class="panel chart-card">
+          <div class="panel-header">
+            <div>
+              <span class="section-label">At Expiry</span>
+              <h2>Payoff Curve</h2>
+            </div>
+            <p>Profit and loss for a long option position using the model premium as the entry cost.</p>
+          </div>
+          <div class="chart-frame" id="payoff-chart" aria-label="Payoff chart"></div>
+        </article>
+
+        <article class="panel chart-card">
+          <div class="panel-header chart-header">
+            <div>
+              <span class="section-label">Before Expiry</span>
+              <h2>Sensitivity Curve</h2>
+            </div>
+            <div class="segmented" role="tablist" aria-label="Sensitivity parameter">
+              <button class="segment active" type="button" data-driver="spot">Spot</button>
+              <button class="segment" type="button" data-driver="volatility">Vol</button>
+              <button class="segment" type="button" data-driver="time">Time</button>
+            </div>
+          </div>
+          <div class="chart-frame" id="sensitivity-chart" aria-label="Sensitivity chart"></div>
+        </article>
+      </section>
+
+      <section class="panel model-note" id="model-note" data-reveal>
+        <div class="panel-header">
+          <div>
+            <span class="section-label">Context</span>
+            <h2>How to Read the Output</h2>
+          </div>
+          <p>This demo favors interpretability over market-data complexity.</p>
         </div>
-        <div class="greek">
-          <span class="symbol">ν Vega</span>
-          <span>Value change per 1% move in implied volatility.</span>
+        <div class="note-grid">
+          <p>
+            Black-Scholes is most useful as a baseline: it prices European
+            options under lognormal returns, constant volatility, and frictionless
+            markets. Real markets break those assumptions, especially around
+            dividends, jumps, skew, and early exercise.
+          </p>
+          <p>
+            That is why the charting here is deterministic and client-side. The
+            point is to understand the shape of the model and its sensitivities,
+            not to imply that a single closed-form value is the market truth.
+          </p>
         </div>
-        <div class="greek">
-          <span class="symbol">ρ Rho</span>
-          <span>Value change per 1% move in the risk-free rate.</span>
-        </div>
-      </div>
-    </section>
+      </section>
+    </main>
 
-    <section id="interfaces">
-      <h2>Three ways to use it</h2>
-      <div class="interfaces">
-        <div class="iface">
-          <h3>Streamlit web app</h3>
-          <p>Interactive sliders for every parameter. Prices and Greeks update instantly as you move inputs.</p>
-          <p><code>streamlit run black_scholes/streamlit/app.py</code></p>
-        </div>
-        <div class="iface">
-          <h3>Command line</h3>
-          <p>Price any ticker directly from the terminal. Pass a strike, expiry, volatility override, or let it fetch live values.</p>
-          <p><code>black-scholes AAPL --plot</code></p>
-        </div>
-        <div class="iface">
-          <h3>Python API</h3>
-          <p>Import <code>black_scholes</code> and <code>calculate_greeks</code> directly into any script or notebook.</p>
-          <p><code>from black_scholes import black_scholes</code></p>
-        </div>
-      </div>
-    </section>
+    <footer class="footer">
+      <p>Built from the pricing logic in the repository and published as a static Pages demo.</p>
+    </footer>
 
-    <section>
-      <h2>What to review in the code</h2>
-      <div class="files">
-        <div class="file"><h3><code>core/pricing.py</code></h3><p>Black-Scholes formula and Greeks implementation.</p></div>
-        <div class="file"><h3><code>utils/market_data.py</code></h3><p>yfinance integration for live prices and Treasury yields.</p></div>
-        <div class="file"><h3><code>streamlit/app.py</code></h3><p>Interactive web interface with real-time parameter adjustment.</p></div>
-        <div class="file"><h3><code>cli/main.py</code></h3><p>Command-line interface and sensitivity plot generation.</p></div>
-      </div>
-    </section>
-
-    <section id="run">
-      <h2>Run locally</h2>
-      <pre><code>git clone https://github.com/astew24/Black-Scholes-Pricing.git
-cd Black-Scholes-Pricing
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-
-# Streamlit app
-streamlit run black_scholes/streamlit/app.py
-
-# CLI
-black-scholes AAPL --plot
-
-# Jupyter tutorial
-jupyter notebook black_scholes/examples/notebooks/black_scholes_tutorial.ipynb</code></pre>
-    </section>
-
-    <section>
-      <h2>Honest limits</h2>
-      <p class="note">
-        Black-Scholes assumes constant volatility, no dividends, and frictionless markets.
-        Real options markets deviate from these assumptions, particularly around earnings,
-        dividends, skew, and early exercise (American options only).
-      </p>
-    </section>
-  </main>
-
-  <footer>
-    <div class="wrap">
-      Andrew Stewart | UC San Diego | <a href="https://github.com/astew24/Black-Scholes-Pricing">github.com/astew24/Black-Scholes-Pricing</a>
-    </div>
-  </footer>
-</body>
+    <script src="./app.js"></script>
+  </body>
 </html>

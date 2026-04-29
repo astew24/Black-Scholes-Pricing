@@ -80,6 +80,16 @@ def test_black_scholes_put():
     assert price > 0
     assert price < 5  # Should be less valuable than ATM option
 
+def test_put_call_parity_prices():
+    """Test that put-call parity holds: C - P = S - K*exp(-rT)."""
+    S, K, T, r, sigma = 100.0, 100.0, 1.0, 0.05, 0.2
+    call = black_scholes(S, K, T, r, sigma, "call")
+    put  = black_scholes(S, K, T, r, sigma, "put")
+    parity_lhs = call - put
+    parity_rhs = S - K * np.exp(-r * T)
+    assert abs(parity_lhs - parity_rhs) < 1e-8
+
+
 def test_black_scholes_input_validation():
     """Test input validation for Black-Scholes pricing."""
     # Test invalid spot price
@@ -192,4 +202,18 @@ def test_greeks_calculation():
     
     assert abs(call_greeks["delta"] + put_greeks["delta"] - 1) < 1e-10
     assert abs(call_greeks["gamma"] - put_greeks["gamma"]) < 1e-10
-    assert abs(call_greeks["vega"] - put_greeks["vega"]) < 1e-10 
+    assert abs(call_greeks["vega"] - put_greeks["vega"]) < 1e-10
+
+
+def test_greeks_signs():
+    """Verify sign conventions: call delta > 0, put delta < 0, theta < 0, gamma > 0."""
+    greeks_call = calculate_greeks(100, 100, 1.0, 0.05, 0.2, "call")
+    greeks_put  = calculate_greeks(100, 100, 1.0, 0.05, 0.2, "put")
+
+    assert greeks_call["delta"] > 0, "call delta should be positive"
+    assert greeks_put["delta"] < 0, "put delta should be negative"
+    assert greeks_call["gamma"] > 0, "gamma should always be positive"
+    assert greeks_put["gamma"] > 0
+    assert greeks_call["theta"] < 0, "theta should be negative (time decay)"
+    assert greeks_put["theta"] < 0
+    assert greeks_call["vega"] > 0, "vega should always be positive"
